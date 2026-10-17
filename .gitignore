@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# uv
+.venv/
+
+# الأسرار: .env عمره ما يترفع، و .env.example بس اللي في الـ repo
+.env
+.env.*
+!.env.example

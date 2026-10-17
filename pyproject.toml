@@ -1,0 +1,29 @@
+[project]
+name = "documind-api"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "ahmed-elembabe", email = "ahmedelembaby08@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.143.3",
+    "pydantic-settings>=2.16.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+# ده تطبيق مش مكتبة، فمش محتاجين نبني package
+[tool.uv]
+package = false
+
+# عشان `uv run fastapi dev` يعرف مكان الـ app لوحده
+[tool.fastapi]
+entrypoint = "app.main:app"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
