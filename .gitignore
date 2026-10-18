@@ -6,7 +6,8 @@ __pycache__/
 # uv
 .venv/
 
-# الأسرار: .env عمره ما يترفع، و .env.example بس اللي في الـ repo
+# ملف الأسرار عمره ما يترفع، والملف اللي فيه المثال بس هو اللي في الريبو
+# .env -> ignored, .env.example -> committed
 .env
 .env.*
 !.env.example

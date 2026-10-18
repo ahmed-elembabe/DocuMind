@@ -16,11 +16,13 @@ dev = [
     "pytest>=9.1.1",
 ]
 
-# ده تطبيق مش مكتبة، فمش محتاجين نبني package
+# ده تطبيق مش مكتبة، فمش محتاجين نبنيه كحزمة
+# package = false
 [tool.uv]
 package = false
 
-# عشان `uv run fastapi dev` يعرف مكان الـ app لوحده
+# عشان أمر التشغيل يعرف مكان التطبيق لوحده
+# uv run fastapi dev
 [tool.fastapi]
 entrypoint = "app.main:app"
 

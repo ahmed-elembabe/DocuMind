@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends
 from app.core.config import Settings, get_settings
 from app.schemas.health import HealthOut
 
-# /health برا v1 لأنه مش جزء من الـ API نفسه، ده للـ monitoring بس
+# المسار ده برا النسخة الأولى لأنه مش جزء من الواجهة نفسها، ده للمراقبة بس
+# /health is outside /api/v1
 router = APIRouter(tags=["health"])
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]

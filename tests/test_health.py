@@ -5,7 +5,7 @@ from app.main import app
 
 
 def test_health_returns_version_and_environment():
-    # بنبدّل الإعدادات بقيم ثابتة عشان التست ميعتمدش على .env بتاع الجهاز
+    # بنبدّل الإعدادات بقيم ثابتة عشان التست ميعتمدش على ملف الإعدادات بتاع الجهاز
     app.dependency_overrides[get_settings] = lambda: Settings(
         app_version="9.9.9", environment="staging", _env_file=None
     )
