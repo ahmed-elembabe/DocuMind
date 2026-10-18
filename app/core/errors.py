@@ -80,7 +80,8 @@ async def http_error_handler(request: Request, exc: StarletteHTTPException) -> J
 # أي خطأ محدش توقعه: العميل بياخد رسالة عامة ورقم الطلب بس
 # والتفاصيل كلها بتتكتب في السجل، عشان منكشفش حاجة من جوه السيستم
 # Exception -> 500
-# ملحوظة: لو DEBUG=true الإطار بيعرض صفحة الخطأ بتاعته بدل المعالج ده
+# ملحوظة: لو وضع التصحيح شغال، الإطار بيعرض صفحة الخطأ بتاعته بدل المعالج ده
+# DEBUG=true
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
     # بيكتب الخطأ كله مع مكانه في الكود
     # logger.exception -> traceback
