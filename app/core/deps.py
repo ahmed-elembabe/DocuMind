@@ -11,6 +11,7 @@ from app.models.org import Org
 from app.repositories.chunk_repo import ChunkRepo
 from app.repositories.document_repo import DocumentRepo
 from app.repositories.file_repo import FileRepo
+from app.repositories.idempotency_repo import IdempotencyRepo
 from app.repositories.usage_repo import UsageRepo
 from app.services.answerer import Answerer
 from app.services.document_service import DocumentService
@@ -68,16 +69,26 @@ def get_usage_repo() -> UsageRepo:
     return UsageRepo()
 
 
+@lru_cache
+def get_idempotency_repo() -> IdempotencyRepo:
+    return IdempotencyRepo()
+
+
 DocumentRepoDep = Annotated[DocumentRepo, Depends(get_document_repo)]
 FileRepoDep = Annotated[FileRepo, Depends(get_file_repo)]
 ChunkRepoDep = Annotated[ChunkRepo, Depends(get_chunk_repo)]
 UsageRepoDep = Annotated[UsageRepo, Depends(get_usage_repo)]
+IdempotencyRepoDep = Annotated[IdempotencyRepo, Depends(get_idempotency_repo)]
 
 
 def get_document_service(
-    settings: SettingsDep, docs: DocumentRepoDep, files: FileRepoDep, chunks: ChunkRepoDep
+    settings: SettingsDep,
+    docs: DocumentRepoDep,
+    files: FileRepoDep,
+    chunks: ChunkRepoDep,
+    idempotency: IdempotencyRepoDep,
 ) -> DocumentService:
-    return DocumentService(docs, files, chunks, settings.max_upload_bytes)
+    return DocumentService(docs, files, chunks, idempotency, settings.max_upload_bytes)
 
 
 def get_ingestion_service(

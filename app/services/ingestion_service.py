@@ -45,6 +45,10 @@ class IngestionService:
             if not texts:
                 raise AppError("empty_file", "الملف فاضي، مفيهوش أي نص يتقسم لفقرات", 422)
 
+            # المهمة ممكن تشتغل مرتين لو اللي بيشغّلها مات في النص بعد ما حفظ الفقرات
+            # فبنمسح أي فقرات قديمة الأول، عشان التشغيل التاني يدّي نفس النتيجة من غير تكرار
+            # idempotent: delete old chunks -> add new chunks
+            self._chunks.delete_by_document(org_id, doc_id)
             self._chunks.add_many(org_id, doc_id, texts)
         except AppError as e:
             self._docs.update_status(org_id, doc_id, "failed", error=e.message_ar)

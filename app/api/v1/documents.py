@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, File, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Header, Query, Response, UploadFile
 
 from app.core.deps import CurrentOrgDep, DocumentServiceDep, IngestionServiceDep
 from app.models.document import DocumentStatus
@@ -18,10 +18,23 @@ async def upload_document(
     service: DocumentServiceDep,
     ingestion: IngestionServiceDep,
     background_tasks: BackgroundTasks,
+    response: Response,
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            min_length=1,
+            max_length=255,
+            description="رقم فريد لكل عملية رفع، ولو اتبعت تاني بيرجع نفس المستند",
+        ),
+    ] = None,
 ) -> DocumentOut:
-    doc = await service.upload(org.id, file)
-    # بتشتغل بعد ما الرد يوصل للعميل، فهو مش مستني التقسيم
-    background_tasks.add_task(ingestion.process, org.id, doc.id)
+    doc, is_new = await service.upload(org.id, file, idempotency_key)
+    if is_new:
+        # بتشتغل بعد ما الرد يوصل للعميل، فهو مش مستني التقسيم
+        background_tasks.add_task(ingestion.process, org.id, doc.id)
+    else:
+        # بنقول للعميل إن ده رد طلب قديم، ومتعملش مستند جديد
+        response.headers["Idempotent-Replayed"] = "true"
     return DocumentOut.model_validate(doc)
 
 

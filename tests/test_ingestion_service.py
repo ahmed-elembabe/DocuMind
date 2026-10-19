@@ -86,3 +86,26 @@ def test_process_skips_deleted_document(setup):
     service.process("org-a", "missing")
 
     assert chunks.list_by_document("org-a", "missing") == []
+
+
+def test_process_twice_does_not_duplicate_chunks(setup):
+    docs, files, chunks, service = setup
+    doc = _upload(docs, files, "أ\n\nب".encode())
+
+    service.process("org-a", doc.id)
+    service.process("org-a", doc.id)
+
+    assert [c.text for c in chunks.list_by_document("org-a", doc.id)] == ["أ", "ب"]
+    assert docs.get("org-a", doc.id).status == "ready"
+
+
+def test_process_replaces_chunks_left_by_a_crashed_run(setup):
+    docs, files, chunks, service = setup
+    doc = _upload(docs, files, "أ\n\nب".encode())
+    # التشغيل اللي فات حفظ الفقرات ومات قبل ما يغيّر الحالة
+    chunks.add_many("org-a", doc.id, ["أ", "ب"])
+
+    service.process("org-a", doc.id)
+
+    assert [c.text for c in chunks.list_by_document("org-a", doc.id)] == ["أ", "ب"]
+    assert docs.get("org-a", doc.id).status == "ready"
