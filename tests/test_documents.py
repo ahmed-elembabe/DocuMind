@@ -7,6 +7,7 @@ from app.main import app
 from app.repositories.chunk_repo import ChunkRepo
 from app.repositories.document_repo import DocumentRepo
 from app.repositories.file_repo import FileRepo
+from tests.pdf_factory import make_pdf
 
 ACME = {"X-API-Key": "test-acme-key"}
 GLOBEX = {"X-API-Key": "test-globex-key"}
@@ -64,10 +65,30 @@ def test_upload_markdown_is_accepted(client):
 
 
 def test_upload_wrong_type_returns_422(client):
-    response = upload(client, b"%PDF", filename="report.pdf")
+    response = upload(client, b"PK", filename="report.docx")
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "unsupported_file_type"
+
+
+def test_upload_pdf_becomes_ready_with_chunks(client, chunks):
+    data = make_pdf([["Introduction", "Rent is one year"], ["Second page"]])
+
+    response = upload(client, data, filename="contract.PDF")
+
+    assert response.status_code == 202
+    doc_id = response.json()["id"]
+    assert client.get(f"/api/v1/documents/{doc_id}", headers=ACME).json()["status"] == "ready"
+    texts = [c.text for c in chunks.list_by_document("org-acme", doc_id)]
+    assert texts == ["Introduction", "Rent is one year", "Second page"]
+
+
+def test_upload_fake_pdf_returns_422(client):
+    # الامتداد بيقول إنه ملف بي دي إف بس المحتوى نص عادي
+    response = upload(client, b"just text", filename="fake.pdf")
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_pdf"
 
 
 def test_upload_exactly_max_size_is_accepted(client):

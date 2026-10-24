@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 
@@ -5,6 +6,7 @@ from app.core.errors import AppError
 from app.repositories.chunk_repo import ChunkRepo
 from app.repositories.document_repo import DocumentRepo
 from app.repositories.file_repo import FileRepo
+from app.services.text_extraction import extract_text
 
 logger = logging.getLogger(__name__)
 
@@ -21,25 +23,25 @@ class IngestionService:
         self._files = files
         self._chunks = chunks
 
-    def process(self, org_id: str, doc_id: str) -> None:
+    async def process(self, org_id: str, doc_id: str) -> None:
         """
         بتشتغل في الخلفية بعد ما الرد يوصل للعميل
 
         مفيش حد مستني الرد بتاعها، فلازم أي خطأ يتمسك ويتسجل في المستند
         بدل ما يضيع
         """
+        doc = self._docs.get(org_id, doc_id)
         data = self._files.get(org_id, doc_id)
-        if data is None:
+        if doc is None or data is None:
             # المستند اتمسح قبل ما المعالجة تبدأ
             return
 
         try:
-            try:
-                # الترميز ده بيشيل العلامة المخفية اللي بعض البرامج بتحطها في أول الملف
-                # utf-8-sig strips the BOM
-                text = data.decode("utf-8-sig")
-            except UnicodeDecodeError:
-                raise AppError("invalid_encoding", "الملف لازم يبقى نص بترميز UTF-8", 422)
+            # قراية الملف شغل تقيل على المعالج ومفيهوش أي انتظار
+            # فلو اشتغل هنا السيرفر كله هيقف لحد ما يخلص
+            # فبنبعته لثريد تاني والسيرفر يكمّل يرد على باقي الطلبات
+            # asyncio.to_thread -> the event loop stays free
+            text = await asyncio.to_thread(extract_text, doc.filename, data)
 
             texts = split_into_chunks(text)
             if not texts:

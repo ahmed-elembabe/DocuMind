@@ -14,7 +14,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 @router.post("", status_code=202, response_model=DocumentOut)
 async def upload_document(
     org: CurrentOrgDep,
-    file: Annotated[UploadFile, File(description="ملف .txt أو .md، أقصى حجم 2MB")],
+    file: Annotated[UploadFile, File(description="ملف .txt أو .md أو .pdf، أقصى حجم 2MB")],
     service: DocumentServiceDep,
     ingestion: IngestionServiceDep,
     background_tasks: BackgroundTasks,

@@ -11,8 +11,9 @@ from app.repositories.chunk_repo import ChunkRepo
 from app.repositories.document_repo import DocumentRepo
 from app.repositories.file_repo import FileRepo
 from app.repositories.idempotency_repo import IdempotencyRepo
+from app.services.text_extraction import PDF_MAGIC
 
-ALLOWED_EXTENSIONS = {".txt", ".md"}
+ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf"}
 
 # رقم منع التكرار بيفضل شغال يوم، وبعد كده نفس الرقم بيعمل مستند جديد
 IDEMPOTENCY_TTL = timedelta(hours=24)
@@ -56,8 +57,9 @@ class DocumentService:
         # بناخد اسم الملف بس ونشيل أي مسار جواه، عشان محدش يبعت اسم يطلع برا الفولدر
         # Path(...).name: ../../etc/passwd -> passwd
         filename = Path(file.filename or "").name
-        if Path(filename).suffix.lower() not in ALLOWED_EXTENSIONS:
-            raise AppError("unsupported_file_type", "مسموح بملفات .txt و .md بس", 422)
+        suffix = Path(filename).suffix.lower()
+        if suffix not in ALLOWED_EXTENSIONS:
+            raise AppError("unsupported_file_type", "مسموح بملفات .txt و .md و .pdf بس", 422)
 
         # بنقرا بايت واحد زيادة عن الحد، ولو اتقرا يبقى الملف أكبر من المسموح
         # ومن غير ما نحمّل ملف ضخم كله في الذاكرة
@@ -65,6 +67,12 @@ class DocumentService:
         if len(data) > self._max_upload_bytes:
             max_mb = self._max_upload_bytes / (1024 * 1024)
             raise AppError("file_too_large", f"أقصى حجم للملف {max_mb:g} ميجا", 413)
+
+        # فحص سريع لأول كام بايت بس من غير ما نقرا الملف كله
+        # لو الامتداد بيقول إنه ملف بي دي إف ومبيبدأش بالعلامة بتاعته نرفضه على طول
+        # %PDF-
+        if suffix == ".pdf" and not data.startswith(PDF_MAGIC):
+            raise AppError("invalid_pdf", "الملف ده مش PDF سليم", 422)
 
         # من هنا لحد آخر الدالة مفيش انتظار، فطلبين بنفس الرقم في نفس اللحظة
         # مش هيدخلوا في بعض، والتاني هيلاقي رقم الأول متسجل
