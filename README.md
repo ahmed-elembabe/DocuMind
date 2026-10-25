@@ -6,7 +6,7 @@ It is the skeleton of a RAG system, built in public, step by step. The pipeline 
 
 **Arabic version:** [README.ar.md](README.ar.md)
 
-![Swagger UI of DocuMind API](docs/images/swagger-docs.png)
+![DocuMind architecture: client, middleware, routers, services and repositories, with background ingestion and the Answerer interface](docs/images/architecture-linkedin.png)
 
 ## Highlights
 
@@ -20,22 +20,24 @@ It is the skeleton of a RAG system, built in public, step by step. The pipeline 
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Client -->|X-API-Key| MW["Middleware<br/>request id + timing"]
-    MW --> R["Routers<br/>app/api/v1"]
-    R --> S["Services<br/>app/services"]
-    S --> Repo["Repositories<br/>app/repositories<br/>org_id required"]
-    R -. background task .-> I["IngestionService<br/>parse in a thread → chunk"]
-    I --> Repo
-    S --> A["Answerer interface<br/>KeywordAnswerer today, RAG next"]
-```
+The diagram above shows the path of every request. Each layer in code:
+
+- **Middleware** ([app/core/middleware.py](app/core/middleware.py)): gives every request an ID and logs its duration. Exception handlers in [app/core/errors.py](app/core/errors.py) turn every error into the same shape.
+- **Routers** ([app/api/v1](app/api/v1)): HTTP in, HTTP out. They check the API key through one dependency and call services, nothing else.
+- **Services** ([app/services](app/services)): the business logic for documents, ingestion, the daily quota and answering.
+- **Repositories** ([app/repositories](app/repositories)): storage. Every method requires `org_id`, which is where tenant isolation happens.
+- **Ingestion** ([app/services/ingestion_service.py](app/services/ingestion_service.py)): runs after the `202` response, parses PDFs in a worker thread and saves the chunks. It is safe to run twice.
+- **Answerer** ([app/services/answerer.py](app/services/answerer.py)): the interface behind `/ask`. Keyword search implements it today, and the LLM will implement it next.
 
 The rule: routers never talk to repositories directly. Routers handle HTTP, services hold the business logic, and repositories own storage (in memory for now, PostgreSQL next).
 
 ## Endpoints
 
 Every route under `/api/v1` requires the `X-API-Key` header. Any route can also return `500` with a generic message.
+
+The interactive docs are served at `/docs`:
+
+![Swagger UI of DocuMind API](docs/images/swagger-docs.png)
 
 | Method | Path | Purpose | Success | Errors |
 | --- | --- | --- | --- | --- |
