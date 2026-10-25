@@ -26,8 +26,8 @@ The diagram above shows the path of every request. Each layer in code:
 - **Routers** ([app/api/v1](app/api/v1)): HTTP in, HTTP out. They check the API key through one dependency and call services, nothing else.
 - **Services** ([app/services](app/services)): the business logic for documents, ingestion, the daily quota and answering.
 - **Repositories** ([app/repositories](app/repositories)): storage. Every method requires `org_id`, which is where tenant isolation happens.
-- **Ingestion** ([app/services/ingestion_service.py](app/services/ingestion_service.py)): runs after the `202` response, parses PDFs in a worker thread and saves the chunks. It is safe to run twice.
-- **Answerer** ([app/services/answerer.py](app/services/answerer.py)): the interface behind `/ask`. Keyword search implements it today, and the LLM will implement it next.
+- **Ingestion** ([app/services/ingestion_service.py](app/services/ingestion_service.py)): runs after the `202` response, parses PDFs in a worker thread and **writes** the chunks to the repositories. It is safe to run twice.
+- **Answerer** ([app/services/answerer.py](app/services/answerer.py)): the interface behind `/ask`. It **reads** the same chunks back, picks the best ones for the question and returns them as sources. Keyword search implements it today, and the LLM will implement it next.
 
 The rule: routers never talk to repositories directly. Routers handle HTTP, services hold the business logic, and repositories own storage (in memory for now, PostgreSQL next).
 
