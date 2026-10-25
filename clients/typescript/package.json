@@ -1,0 +1,14 @@
+{
+  "name": "documind-api-types",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "export": "cd ../.. && uv run python -m scripts.export_openapi",
+    "generate": "npm run export && openapi-typescript openapi.json -o schema.d.ts",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

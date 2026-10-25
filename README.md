@@ -180,6 +180,36 @@ X-Request-Id
 router -> service -> repository
 ```
 
+## أنواع التايب سكريبت
+
+الواجهة الأمامية بتاخد أشكال كل الطلبات والردود جاهزة، ومتولدة من الباك إند نفسه:
+
+```text
+clients/typescript/
+  openapi.json     وصف الواجهة، متولد من الكود
+  schema.d.ts      الأنواع، متولدة من الوصف
+  index.ts         أسماء قصيرة للأنواع
+  types.check.ts   بيتأكد إن الأنواع بتمسك الغلط
+```
+
+استخدامها في الواجهة الأمامية:
+
+```ts
+import type { AskOut, ErrorOut } from "./clients/typescript";
+```
+
+الملفات المتولدة متعدلهاش بإيدك.
+لو غيّرت شكل أي طلب أو رد في الباك إند، ولّد الأنواع تاني واتأكد إنها سليمة:
+
+```bash
+cd clients/typescript
+npm install
+npm run generate
+npm run check
+```
+
+ولو نسيت تولّد، فيه تست هيقع ويقولك الأمر ده.
+
 ## التستات
 
 ```bash

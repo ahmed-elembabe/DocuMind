@@ -6,6 +6,10 @@ __pycache__/
 # uv
 .venv/
 
+# مكتبات النود بتتسطّب من ملف القفل بتاعها ومش بتترفع
+# node_modules -> ignored, package-lock.json -> committed
+node_modules/
+
 # ملف الأسرار عمره ما يترفع، والملف اللي فيه المثال بس هو اللي في الريبو
 # .env -> ignored, .env.example -> committed
 .env
