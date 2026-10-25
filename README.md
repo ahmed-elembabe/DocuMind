@@ -25,7 +25,7 @@ flowchart LR
     Client -->|X-API-Key| MW["Middleware<br/>request id + timing"]
     MW --> R["Routers<br/>app/api/v1"]
     R --> S["Services<br/>app/services"]
-    S --> Repo["Repositories<br/>app/repositories<br/>(every call takes org_id)"]
+    S --> Repo["Repositories<br/>app/repositories<br/>org_id required"]
     R -. background task .-> I["IngestionService<br/>parse in a thread → chunk"]
     I --> Repo
     S --> A["Answerer interface<br/>KeywordAnswerer today, RAG next"]
