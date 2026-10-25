@@ -5,13 +5,19 @@ from fastapi import APIRouter, BackgroundTasks, File, Header, Query, Response, U
 from app.core.deps import CurrentOrgDep, DocumentServiceDep, IngestionServiceDep
 from app.models.document import DocumentStatus
 from app.schemas.document import DocumentListOut, DocumentOut
+from app.schemas.errors import ErrorOut
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+# الردود دي بترجع من السيرفس، فبنوثّقها عشان تظهر في صفحة التوثيق وفي أي أنواع بتتولد منها
+# responses -> /docs, /openapi.json
+NOT_FOUND = {404: {"model": ErrorOut, "description": "المستند مش موجود أو بتاع شركة تانية"}}
+TOO_LARGE = {413: {"model": ErrorOut, "description": "الملف أكبر من الحجم المسموح"}}
 
 
 # استلمنا الملف، بس المعالجة لسه مخلصتش
 # 202 Accepted
-@router.post("", status_code=202, response_model=DocumentOut)
+@router.post("", status_code=202, response_model=DocumentOut, responses=TOO_LARGE)
 async def upload_document(
     org: CurrentOrgDep,
     file: Annotated[UploadFile, File(description="ملف .txt أو .md أو .pdf، أقصى حجم 2MB")],
@@ -52,13 +58,13 @@ def list_documents(
     )
 
 
-@router.get("/{doc_id}", response_model=DocumentOut)
+@router.get("/{doc_id}", response_model=DocumentOut, responses=NOT_FOUND)
 def get_document(org: CurrentOrgDep, doc_id: str, service: DocumentServiceDep) -> DocumentOut:
     return DocumentOut.model_validate(service.get(org.id, doc_id))
 
 
 # اتمسح ومفيش محتوى يرجع في الرد
 # 204 No Content
-@router.delete("/{doc_id}", status_code=204)
+@router.delete("/{doc_id}", status_code=204, responses=NOT_FOUND)
 def delete_document(org: CurrentOrgDep, doc_id: str, service: DocumentServiceDep) -> None:
     service.delete(org.id, doc_id)
