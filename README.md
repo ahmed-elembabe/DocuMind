@@ -86,6 +86,9 @@ Reserving the quota first means concurrent requests cannot overshoot the limit, 
 **Why is background processing safe to run twice?**
 A job queue can deliver the same job again if a worker dies midway. Ingestion deletes a document's old chunks before saving new ones, so a second run gives the same result instead of duplicates.
 
+**Why limit the request size in a middleware, and not only in the service?**
+FastAPI parses a multipart upload before the endpoint runs and writes the whole file to a temporary file on disk, so the service's size check came too late. On a live server, a 50 MB upload was fully received before the `413`. A small ASGI middleware now rejects the request from its `Content-Length` header without reading the body, or stops reading a chunked body as soon as it passes the limit. The same 50 MB upload is now rejected after receiving 0 bytes.
+
 ## Known limitations
 
 These are deliberate for this stage, and each one has a planned fix.

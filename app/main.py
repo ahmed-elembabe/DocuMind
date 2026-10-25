@@ -4,6 +4,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import health
 from app.api.v1.router import api_router
+from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import get_settings
 from app.core.errors import (
     AppError,
@@ -21,6 +22,10 @@ setup_logging()
 
 app = FastAPI(title=settings.app_name, version=settings.app_version, debug=settings.debug)
 
+# اللي بيتضاف الأول بيبقى جوه، فحد الحجم جوه وسيط رقم الطلب
+# عشان رد الرفض ياخد رقم طلب ويتكتب في السجل زي أي رد
+# request_context_middleware -> BodySizeLimitMiddleware -> app
+app.add_middleware(BodySizeLimitMiddleware, max_upload_bytes=settings.max_upload_bytes)
 app.middleware("http")(request_context_middleware)
 
 app.add_exception_handler(AppError, app_error_handler)
