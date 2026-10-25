@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     app_name: str = "DocuMind API"
-    app_version: str = "0.1.0"
+    app_version: str = "0.2.2"
     environment: Literal["development", "staging", "production"] = "development"
     debug: bool = False
 
